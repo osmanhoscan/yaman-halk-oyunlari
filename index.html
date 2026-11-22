@@ -21,7 +21,44 @@ $('prev').onclick=()=>move(current-1);$('next').onclick=()=>move(current+1);$('f
 let startX=0,startY=0;sheet.addEventListener('touchstart',e=>{startX=e.changedTouches[0].clientX;startY=e.changedTouches[0].clientY},{passive:true});sheet.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-startX,dy=e.changedTouches[0].clientY-startY;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.3)move(current+(dx<0?1:-1))},{passive:true});
 document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')move(current+1);if(e.key==='ArrowLeft')move(current-1)});
 let resizeTimer;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(pdf&&!busy)render().catch(()=>{})},250)});
-const audio=$('audio');let audioURL=null;$('music').onclick=()=>{if(audio.src&&!audio.paused){audio.pause();$('music').textContent='♫ Müziği aç'}else if(audio.src){audio.play().then(()=>$('music').textContent='♫ Müziği durdur').catch(()=>{})}else $('audioFile').click()};$('audioFile').onchange=e=>{const file=e.target.files?.[0];if(!file)return;if(audioURL)URL.revokeObjectURL(audioURL);audioURL=URL.createObjectURL(file);audio.src=audioURL;audio.play().then(()=>$('music').textContent='♫ Müziği durdur').catch(()=>{})};
+
+
+const audio = $('audio');
+const musicBtn = $('music');
+
+audio.src = 'muzik.mp3';
+audio.loop = true;
+audio.preload = 'auto';
+
+musicBtn.textContent = '🔇 Sesi Aç';
+
+function updateMusicButton() {
+  musicBtn.textContent = audio.paused ? '🔇 Sesi Aç' : '🔊 Sesi Kapat';
+}
+
+musicBtn.onclick = async () => {
+  if (audio.paused) {
+    try {
+      await audio.play();
+    } catch (e) {
+      console.warn('Müzik başlatılamadı:', e);
+    }
+  } else {
+    audio.pause();
+  }
+  updateMusicButton();
+};
+
+audio.addEventListener('play', updateMusicButton);
+audio.addEventListener('pause', updateMusicButton);
+
+// Sayfa açıldığında müziği otomatik başlatmayı dene.
+audio.play().catch(() => {
+  // Tarayıcı engellerse ziyaretçi Sesi Aç düğmesine basar.
+  updateMusicButton();
+});
+
+
 try {
   pdf = await pdfjsLib.getDocument({url: encodeURI(pdfName)}).promise;
   await render();
