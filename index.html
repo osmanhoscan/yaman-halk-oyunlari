@@ -30,10 +30,10 @@ audio.src = 'muzik.mp3';
 audio.loop = true;
 audio.preload = 'auto';
 
-musicBtn.textContent = '🔇 Sesi Aç';
-
 function updateMusicButton() {
-  musicBtn.textContent = audio.paused ? '🔇 Sesi Aç' : '🔊 Sesi Kapat';
+  musicBtn.textContent = audio.paused
+    ? '🔇 Sesi Aç'
+    : '🔊 Sesi Kapat';
 }
 
 musicBtn.onclick = async () => {
@@ -51,20 +51,45 @@ musicBtn.onclick = async () => {
 
 audio.addEventListener('play', updateMusicButton);
 audio.addEventListener('pause', updateMusicButton);
-
-// Sayfa açıldığında müziği otomatik başlatmayı dene.
-audio.play().catch(() => {
-  // Tarayıcı engellerse ziyaretçi Sesi Aç düğmesine basar.
-  updateMusicButton();
+audio.addEventListener('error', () => {
+  musicBtn.textContent = '⚠️ Müzik açılamadı';
 });
 
+// İlk açılışta otomatik oynatmayı dene.
+musicBtn.textContent = '🔊 Sesi Kapat';
+
+audio.play().then(() => {
+  updateMusicButton();
+}).catch(() => {
+  updateMusicButton();
+
+  // İlk dokunuşta müziği başlat.
+  const startOnInteraction = async () => {
+    try {
+      await audio.play();
+    } catch (e) {
+      console.warn('Müzik başlatılamadı:', e);
+    }
+    updateMusicButton();
+    document.removeEventListener('pointerdown', startOnInteraction);
+    document.removeEventListener('keydown', startOnInteraction);
+  };
+
+  document.addEventListener('pointerdown', startOnInteraction, {once:true});
+  document.addEventListener('keydown', startOnInteraction, {once:true});
+});
 
 try {
-  pdf = await pdfjsLib.getDocument({url: encodeURI(pdfName)}).promise;
+  pdf = await pdfjsLib.getDocument({
+    url: encodeURI(pdfName)
+  }).promise;
+
   await render();
   controls();
+
   msg.hidden = true;
   msg.style.display = 'none';
+
 } catch(e) {
   msg.textContent = 'Hata: ' + e.message;
   msg.hidden = false;
