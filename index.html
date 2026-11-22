@@ -22,5 +22,14 @@ let startX=0,startY=0;sheet.addEventListener('touchstart',e=>{startX=e.changedTo
 document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')move(current+1);if(e.key==='ArrowLeft')move(current-1)});
 let resizeTimer;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(pdf&&!busy)render().catch(()=>{})},250)});
 const audio=$('audio');let audioURL=null;$('music').onclick=()=>{if(audio.src&&!audio.paused){audio.pause();$('music').textContent='♫ Müziği aç'}else if(audio.src){audio.play().then(()=>$('music').textContent='♫ Müziği durdur').catch(()=>{})}else $('audioFile').click()};$('audioFile').onchange=e=>{const file=e.target.files?.[0];if(!file)return;if(audioURL)URL.revokeObjectURL(audioURL);audioURL=URL.createObjectURL(file);audio.src=audioURL;audio.play().then(()=>$('music').textContent='♫ Müziği durdur').catch(()=>{})};
-try{pdf=await pdfjsLib.getDocument({url:encodeURI(pdfName)}).promise;await render();controls();msg.hidden=true}catch(e){msg.textContent='Hata: '+e.message;msg.hidden=false}
+try {
+  pdf = await pdfjsLib.getDocument({url: encodeURI(pdfName)}).promise;
+  await render();
+  controls();
+  msg.hidden = true;
+  msg.style.display = 'none';
+} catch(e) {
+  msg.textContent = 'Hata: ' + e.message;
+  msg.hidden = false;
+}
 </script></body></html>
